@@ -22,6 +22,7 @@ PINK = (25, 20, 0)
 # Создаем игру и окно
 pygame.init()
 pygame.mixer.init()
+pygame.font.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("clown sdoh")
 clock = pygame.time.Clock()
@@ -94,7 +95,7 @@ class Player(pygame.sprite.Sprite):
             self.speedy = -4
         self.rect.y += self.speedy
         if keystate[pygame.K_s]:
-            self.speedy = 4
+            self.speedy = 8
         self.rect.y += self.speedy
         if self.rect.top > HEIGHT:
             self.rect.top = HEIGHT
@@ -103,6 +104,10 @@ class Player(pygame.sprite.Sprite):
 
 
 font_name = pygame.font.match_font('arial')
+label = pygame.font.Font('rofl.ttf', 40)
+restart_label = label.render('restart',False,(115,132,148))
+restart_label_rect = restart_label.get_rect(topleft=(180,200))
+
 def draw_text(surf, text, size, x, y):
     font = pygame.font.Font(font_name, size)
     text_surface = font.render(text, True, WHITE)
@@ -112,17 +117,11 @@ def draw_text(surf, text, size, x, y):
 
 
 
-
-
-
-
-
-
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
-for i in range(50):
+for i in range(20):
     m = Mob()
     all_sprites.add(m)
     mobs.add(m)
@@ -130,8 +129,9 @@ for i in range(50):
 
 # Цикл игры
 running = True
-while running:
+gameplay = True
 
+while running:
 
     # Держим цикл на правильной скорости
     clock.tick(FPS)
@@ -140,21 +140,42 @@ while running:
         # проверка для закрытия окна
         if event.type == pygame.QUIT:
             running = False
+    if gameplay:
 
-    # Обновление
+
+    # Рендеринг
+        screen.fill(BLACK)
+        screen.blit(pygame.transform.scale(background, (1280, 1024)), background_rect)
+        all_sprites.draw(screen)
+        hits = pygame.sprite.spritecollide(player, mobs, False)
+        timeend = pygame.time.get_ticks()/ 1000
+        time = draw_text(screen, str(timeend), 40, WIDTH / 4, 2)
+
+
+    else:
+        screen.fill((0,0,0))
+        pygame.time.Clock()
+        draw_text(screen, str(timeend), 40, WIDTH / 4, 2)
+        draw_text(screen, str('потрачено....'), 128 , 600, HEIGHT/ 3)
+        screen.blit(restart_label,restart_label_rect)
+        mouse = pygame.mouse.get_pos()
+        if restart_label_rect.collidepoint(mouse):
+            gameplay = True
+
+
+
+
+
+
+
+            # Обновление
     all_sprites.update()
     hits = pygame.sprite.spritecollide(player, mobs, False)
     if hits:
-        running = False
-
-    # Рендеринг
-    screen.fill(BLACK)
-    screen.blit(pygame.transform.scale(background, (1280, 1024)), background_rect)
-    all_sprites.draw(screen)
+        gameplay = False
 
 
 
-    draw_text(screen, str(), 18, WIDTH / 2, 1)
 
 
     # После отрисовки всего, переворачиваем экран
