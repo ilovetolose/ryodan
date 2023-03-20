@@ -17,7 +17,8 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
-PINK = (25, 20, 0)
+PINK = (252, 15, 192)
+PURPLE = (224, 176, 255)
 
 # Создаем игру и окно
 pygame.init()
@@ -104,27 +105,26 @@ class Player(pygame.sprite.Sprite):
 
 
 font_name = pygame.font.match_font('arial')
-label = pygame.font.Font('rofl.ttf', 40)
-restart_label = label.render('restart',False,(115,132,148))
-restart_label_rect = restart_label.get_rect(topleft=(180,200))
+label = pygame.font.Font('rofl.ttf', 128)
+restart_label = label.render('restart',False,(PINK))
+restart_label_rect = restart_label.get_rect(topleft=(WIDTH/2,200))
 
-def draw_text(surf, text, size, x, y):
+def draw_text(surf, text, size, x, y,color):
     font = pygame.font.Font(font_name, size)
-    text_surface = font.render(text, True, WHITE)
+    text_surface = font.render(text, True, color)
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
-
-
 
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
-for i in range(20):
+for i in range(30):
     m = Mob()
     all_sprites.add(m)
     mobs.add(m)
+score = 0
 
 
 # Цикл игры
@@ -148,36 +148,37 @@ while running:
         screen.blit(pygame.transform.scale(background, (1280, 1024)), background_rect)
         all_sprites.draw(screen)
         hits = pygame.sprite.spritecollide(player, mobs, False)
-        timeend = pygame.time.get_ticks()/ 1000
-        time = draw_text(screen, str(timeend), 40, WIDTH / 4, 2)
-
-
+        score+=1
+        time = draw_text(screen,'вашиочко: '+str(score), 40, WIDTH / 4, 2,WHITE)
     else:
         screen.fill((0,0,0))
         pygame.time.Clock()
-        draw_text(screen, str(timeend), 40, WIDTH / 4, 2)
-        draw_text(screen, str('потрачено....'), 128 , 600, HEIGHT/ 3)
+        draw_text(screen, 'вашиочко который ты заработал: '+str(score), 40, WIDTH / 2, 2,WHITE)
+        draw_text(screen, str('потрачено....'), 128 , 600, HEIGHT/ 3,WHITE)
+        draw_text(screen, 'GTA RYODAN:VICEVICEVICEAVICEXD', 40, WIDTH / 2, 800,PURPLE)
         screen.blit(restart_label,restart_label_rect)
-        mouse = pygame.mouse.get_pos()
-        if restart_label_rect.collidepoint(mouse):
+
+        pos = pygame.mouse.get_pos()
+        pressed = pygame.mouse.get_pressed()
+        all_sprites = pygame.sprite.Group()
+        mobs = pygame.sprite.Group()
+        player = Player()
+        all_sprites.add(player)
+        if restart_label_rect.collidepoint(pos) and pressed[0]:
             gameplay = True
-
-
-
-
-
-
-
+            score = 0
+            player.rect.centerx = 640
+            player.rect.bottom = 980
+            pygame.sprite.groupcollide(mobs, player, True, True)
+            for i in range(30):
+                m = Mob()
+                all_sprites.add(m)
+                mobs.add(m)
             # Обновление
     all_sprites.update()
     hits = pygame.sprite.spritecollide(player, mobs, False)
     if hits:
         gameplay = False
-
-
-
-
-
     # После отрисовки всего, переворачиваем экран
     pygame.display.flip()
 
