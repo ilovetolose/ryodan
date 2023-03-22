@@ -33,7 +33,7 @@ background = pygame.image.load(path.join('aviapark.png')).convert()
 background_rect = background.get_rect()
 player_img = pygame.image.load(path.join( "ryodan.jpg")).convert()
 vrag_img = pygame.image.load(path.join( 'stoneisland.png')).convert()
-
+boss_img = pygame.image.load(path.join( 'boss.png')).convert()
 
 background_rect = background.get_rect()
 
@@ -78,6 +78,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
         self.speedy = 0
+        self.hp = 100
 
     def update(self):
         self.speedx = 0
@@ -102,6 +103,23 @@ class Player(pygame.sprite.Sprite):
             self.rect.top = HEIGHT
         if self.rect.top < 0:
             self.rect.top = 0
+class Boss(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.transform.scale(boss_img, (200, 100))
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(WIDTH - self.rect.width)
+        self.rect.y = random.randrange(-100, -40)
+        self.speedy = random.randrange(1, 8)
+        self.speedx = random.randrange(-3, 3)
+
+    def update(self):
+        self.rect.x += self.speedx
+        self.rect.y += self.speedy
+        if self.rect.top > HEIGHT + 10 or self.rect.left < -25 or self.rect.right > WIDTH + 20:
+            self.rect.x = random.randrange(WIDTH - self.rect.width)
+            self.rect.y = random.randrange(-100, -40)
+            self.speedy = random.randrange(1, 8)
 
 
 font_name = pygame.font.match_font('arial')
@@ -116,10 +134,24 @@ def draw_text(surf, text, size, x, y,color):
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
 
+def draw_shield_bar(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = 300
+    BAR_HEIGHT = 20
+    fill = (pct / 100) * BAR_LENGTH
+    outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+    pygame.draw.rect(surf, GREEN, fill_rect)
+    pygame.draw.rect(surf, WHITE, outline_rect, 2)
+boss = Boss()
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
+all_sprites.add(boss)
+
+
 for i in range(30):
     m = Mob()
     all_sprites.add(m)
@@ -150,6 +182,9 @@ while running:
         hits = pygame.sprite.spritecollide(player, mobs, False)
         score+=1
         time = draw_text(screen,'вашиочко: '+str(score), 40, WIDTH / 4, 2,WHITE)
+        draw_shield_bar(screen, 1000, 40,player.hp)
+        draw_text(screen, 'ваши хп', 40, 900, 20, GREEN)
+
     else:
         screen.fill((0,0,0))
         pygame.time.Clock()
@@ -164,12 +199,16 @@ while running:
         mobs = pygame.sprite.Group()
         player = Player()
         all_sprites.add(player)
+        all_sprites.add(boss)
         if restart_label_rect.collidepoint(pos) and pressed[0]:
             gameplay = True
             score = 0
             player.rect.centerx = 640
             player.rect.bottom = 980
             pygame.sprite.groupcollide(mobs, player, True, True)
+
+
+
             for i in range(30):
                 m = Mob()
                 all_sprites.add(m)
@@ -177,8 +216,16 @@ while running:
             # Обновление
     all_sprites.update()
     hits = pygame.sprite.spritecollide(player, mobs, False)
-    if hits:
+    for hit in hits:
+        player.hp -= 1
+        if player.hp <= 0:
+            gameplay = False
+    kek = pygame.sprite.collide_rect(player, boss)
+    if kek:
         gameplay = False
+
+
+
     # После отрисовки всего, переворачиваем экран
     pygame.display.flip()
 
